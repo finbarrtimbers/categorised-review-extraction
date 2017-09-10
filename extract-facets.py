@@ -1,20 +1,22 @@
 from collections import defaultdict
+
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
-from sklearn.metrics import jaccard_similarity_score
+from nltk.stem.snowball import EnglishStemmer
 
-def match(sentence, description):
-    # If this proves to be computationally expensive, I'd cache this call.
-    # However, I think it's just a dictionary lookup, so it should be cheap.
-    stop=set(stopwords.words('english'))
-    sentence_words = set([w for w in word_tokenize(sentence) if w
-                          not in stop])
-    # we don't need to tokenize the description as it's already just words
-    description_words = set([w for w in description if w not in stop])
+from sklearn.metrics import jaccard_similarity_score
+    
+def match(sentence, description, stemmer=EnglishStemmer(ignore_stopwords=True)):
+    # Note: In a production setting, I'd train some sort of word embedding, like
+    # doc2vec, and then use some sort of deep net on top of that to directly
+    # learn to classify sentences & descriptions
+    # Because of time, I use a simple stemmer instead:
+    sentence_words = [stemmer.stem(w) for w in word_tokenize(sentence)]
     # This has a number of drawbacks, e.g. if it only has one word... I'd want
     # to think about this more before putting it in production
     # We calculate the % of words in the sentence that fall in the description
     # Drawback: ignores order
+    sentence_words = set(sentence_words)
     similarity = len(sentence_words & description_words) / len(sentence_words)
     return similarity 
     
@@ -31,11 +33,30 @@ def summarise(sentences):
         if sentences[i][1] > sentences[max_score_index][1]:
             max_score_index = i
     return sentences[i][0]
-       
-def extract_facets(review_text, categories):
+
+def get_categories():
+    categories = {'price': ['price', 'cost', 'expensive', 'inexpensive',
+                            'cheap'],
+                  'durability': ['durable', 'build', 'built', 'lasts', 'breaks',
+                                 'broken'],
+                  'sound_quality': ['sounds', 'bass', 'treble', 'frequencies',
+                                    'fidelity']}
+    # We preprocess the category descriptions to save time later on
+    stemmer = EnglishStemmer(ignore_stopwords=True)
+    for category in categories:
+        categories[category] = set([stemmer.stem(w) for
+                                    w in categories[category]])
+    return categories
+
+def extract_facets(review_text, categories=None):
+    if not categories:
+        categories = get_categories()
     review_sentences = sent_tokenize(review_text)
     categorised_sentences = defaultdict(list)
-    THRESHOLD = 0.5
+    # I use a pretty low threshold, as the category descriptions are quite
+    # specific. Basically, we say that a sentence falls in a description if
+    # one or two words are from the category description
+    THRESHOLD = 0.10
     for sentence in review_sentences:
         # If using tensorflow (or other ML framework), I would do
         # the next step simultaneously, by learning a probability distribution
@@ -49,13 +70,9 @@ def extract_facets(review_text, categories):
                     category in categorised_sentences}
     return json.dumps(review_facts)
 
+
 def main():
-    categories = {'price': ['price', 'cost', 'expensive', 'inexpensive',
-                            'cheap'],
-                  'durability': ['durable', 'build', 'built', 'lasts', 'breaks',
-                                 'broken'],
-                  'sound_quality': ['sounds', 'bass', 'treble', 'frequencies',
-                                    'fidelity']}
-    with open('corpus.txt', 'r') as review_file:
+    categories = get_categories()
+    with open('example-corpus.txt', 'r') as review_file:
         for review in review_file:
-            print(extract_facets(review, categories))
+            print(extract_facets(review, categories, model))
