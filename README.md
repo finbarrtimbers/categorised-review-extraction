@@ -19,6 +19,10 @@ certain threshold is deemed to describe that category. We then return a JSON
 that contains, for each category, all the sentences describing that category,
 and the sentence with the highest category score. 
 
+## Known problems
+- Code runs, but the results aren't great. None of the categories, except for
+  sound quality, seem to work particularly well.
+
 ## Dependencies
 - Uses [NLTK](http://www.nltk.org/) for stemming & tokenization
 

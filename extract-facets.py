@@ -1,4 +1,5 @@
 from collections import defaultdict
+import json
 
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
@@ -17,7 +18,7 @@ def match(sentence, description, stemmer=EnglishStemmer(ignore_stopwords=True),
     # We calculate the % of words in the sentence that fall in the description
     # Drawback: ignores order
     sentence_words = set(sentence_words)
-    similarity = len(sentence_words & description_words) / len(sentence_words)
+    similarity = len(sentence_words & description) / len(sentence_words)
     return similarity 
     
 def summarise(sentences):
@@ -32,8 +33,9 @@ def summarise(sentences):
     for i in range(len(sentences)):
         if sentences[i][1] > sentences[max_score_index][1]:
             max_score_index = i
-    return sentences[i][0]
-
+    return sentences[max_score_index][0]
+    
+    
 def get_categories():
     categories = {'price': ['price', 'cost', 'expensive', 'inexpensive',
                             'cheap'],
@@ -56,19 +58,25 @@ def extract_facets(review_text, categories=None):
     # I use a pretty low threshold, as the category descriptions are quite
     # specific. Basically, we say that a sentence falls in a description if
     # one or two words are from the category description
-    THRESHOLD = 0.10
+    THRESHOLD = 0.01
     for sentence in review_sentences:
         # If using tensorflow (or other ML framework), I would do
         # the next step simultaneously, by learning a probability distribution
         # over the N categories and adding the sentences to the category
         # lists if the probability was over a threshold
-        for category, category_description in categories:
-            match_score = match(sentence, category_description)
+        for category in categories:
+            match_score = match(sentence, categories[category])
             if match_score > THRESHOLD:
                 categorised_sentences[category].append((sentence, match_score))
-    review_facts = {category: {'snippet': summarise(categorised_sentences[category]),
-                               'sentences': categorised_sentences[category]} for
-                    category in categorised_sentences}
+    review_facts = dict()
+    for category in categories:
+        print(category)
+        if len(categorised_sentences[category]) == 0:
+            review_fact = {'snippet': '', 'sentences': []}
+        else:
+            review_fact = {'snippet': summarise(categorised_sentences[category]),
+                           'sentences': [c[0] for c in categorised_sentences[category]]}
+        review_facts[category] = review_fact
     return json.dumps(review_facts)
 
 
@@ -76,4 +84,6 @@ def main():
     categories = get_categories()
     with open('example-corpus.txt', 'r') as review_file:
         for review in review_file:
-            print(extract_facets(review, categories, model))
+            print(extract_facets(review, categories))
+
+main()
