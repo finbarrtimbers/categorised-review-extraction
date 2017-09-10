@@ -25,6 +25,7 @@ and the sentence with the highest category score.
 
 ## Dependencies
 - Uses [NLTK](http://www.nltk.org/) for stemming & tokenization
+- Python 3.6 (possibly other versions- this hasn't been tested).
 
 ## Future improvements
 - We relying on an individual to define the categories and to describe
