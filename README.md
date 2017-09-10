@@ -34,6 +34,9 @@ pre-existing corpuses, which are not from a similar task (they're from, e.g.,
 Wikipedia).
 - A lot of the system is defined using hand-tuned features. An end-to-end
 machine learning classifier would probably perform better.
+- No unit tests, which is bad. If given more time I'd add unit tests.
+- No code coverage statistics.
+- No linting/static analysis. 
 - Use a better summarisation platform. We have to include redundant words in
 the descriptions because NLTK's stemming & lemmatization functions treat
 "built" and "build" differently (which is arguably a good thing).
