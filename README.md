@@ -1,30 +1,39 @@
 # Categorised sentence extraction from reviews
 
-
-
-Spend ~5 minutes browsing customer reviews of Musical Instruments on Amazon (https://www.amazon.com/b?&node=11091801).
-Brainstorm an approach that identifies, given a customer review, whether the review mentions one or more of the following product facets: price, durability, and/or sound quality.
-Submit a function that takes the raw text of a customer review as input and outputs a JSON consisting of the facets extracted from the review and a snippet pertinent to each facet.
+Given a set of categories with words that describe them, this code takes in the
+text of a product review, and pulls out sentences for each category, returning
+the result as a JSON consisting of the sentences relevant to each category, and
+a snippet pertinent to each category.
 
 ## Overview
-- Uses [GloVe](https://github.com/stanfordnlp/GloVe) to create word vectors.
-- Uses [NLTK](http://www.nltk.org/) for lemmatization
+Categories are defined as a name (e.g. "price") and a list of descriptor words,
+e.g. "price", "cost", "expensive", "inexpensive", "cheap", that a reviewer would
+use when discussing the category. It is important to include both positive and
+negative descriptors.
 
-# Example
+The review is split into sentences, and each sentence is tokenized into words,
+and the stopwords are removed. Then, we calculate a category score for each
+sentence, where the score is defined as the percentage of words of the sentence
+that come from that category. Every sentence that has a category score above a
+certain threshold is deemed to describe that category. We then return a JSON
+that contains, for each category, all the sentences describing that category,
+and the sentence with the highest category score. 
 
-If you wish, you may leverage an external knowledge-base (such as WordNet or word embeddings), but please do not use a machine learning framework or toolkit for this task. We are mainly evaluating problem solving and coding.
-
-
-We are looking for a "reasonable" solution: Does the code use sensible data structures and control flow? Does the approach perform reasonably well given the constraints? How does the solution ensure accuracy when extracting facets and snippets?
-
-Does the code have to build?
-
-The code does not have to build, but it should be written in a real programming language (not pseudocode). This ensures that we are able to follow along without guesswork.
-
-## Customisation
-- Train the GloVe embeddings on your own corpus by 
-
+## Dependencies
+- Uses [NLTK](http://www.nltk.org/) for stemming & tokenization
 
 ## Future improvements
-- Get a better corpus
-- Use a better summarisation platform
+- We relying on an individual to define the categories and to describe
+them. It would be better to use some sort of embedding, like
+[word2vec](https://en.wikipedia.org/wiki/Word2vec) or
+[doc2vec](https://arxiv.org/abs/1405.4053) to learn a better representation
+of the categories and sentences.  
+- If we use some sort of embedding, it would be good to develop our own corpus
+of reviews. Currently we do not have that, and would have to use one of the
+pre-existing corpuses, which are not from a similar task (they're from, e.g.,
+Wikipedia).
+- A lot of the system is defined using hand-tuned features. An end-to-end
+machine learning classifier would probably perform better.
+- Use a better summarisation platform. We have to include redundant words in
+the descriptions because NLTK's stemming & lemmatization functions treat
+"built" and "build" differently (which is arguably a good thing).

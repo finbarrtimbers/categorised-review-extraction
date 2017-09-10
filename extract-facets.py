@@ -4,14 +4,14 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.snowball import EnglishStemmer
 
-from sklearn.metrics import jaccard_similarity_score
-    
-def match(sentence, description, stemmer=EnglishStemmer(ignore_stopwords=True)):
+def match(sentence, description, stemmer=EnglishStemmer(ignore_stopwords=True),
+          stop=set(stopwords.words('english'))):
     # Note: In a production setting, I'd train some sort of word embedding, like
     # doc2vec, and then use some sort of deep net on top of that to directly
     # learn to classify sentences & descriptions
     # Because of time, I use a simple stemmer instead:
-    sentence_words = [stemmer.stem(w) for w in word_tokenize(sentence)]
+    sentence_words = [stemmer.stem(w) for w in word_tokenize(sentence) if
+                      w not in stop]
     # This has a number of drawbacks, e.g. if it only has one word... I'd want
     # to think about this more before putting it in production
     # We calculate the % of words in the sentence that fall in the description
@@ -66,7 +66,8 @@ def extract_facets(review_text, categories=None):
             match_score = match(sentence, category_description)
             if match_score > THRESHOLD:
                 categorised_sentences[category].append((sentence, match_score))
-    review_facts = {category: summarise(categorised_sentences[category]) for
+    review_facts = {category: {'snippet': summarise(categorised_sentences[category]),
+                               'sentences': categorised_sentences[category]} for
                     category in categorised_sentences}
     return json.dumps(review_facts)
 
