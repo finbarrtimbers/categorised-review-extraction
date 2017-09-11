@@ -11,7 +11,7 @@ e.g. "price", "cost", "expensive", "inexpensive", "cheap", that a reviewer would
 use when discussing the category. It is important to include both positive and
 negative descriptors.
 
-The review is split into sentences, and each sentence is tokenized into words,
+The review is split into sentences, each sentence is tokenized into words,
 and the stopwords are removed. Then, we calculate a category score for each
 sentence, where the score is defined as the percentage of words of the sentence
 that come from that category. Every sentence that has a category score above a
@@ -33,7 +33,7 @@ them. It would be better to use some sort of embedding, like
 [word2vec](https://en.wikipedia.org/wiki/Word2vec) or
 [doc2vec](https://arxiv.org/abs/1405.4053) to learn a better representation
 of the categories and sentences.  
-- If we use some sort of embedding, it would be good to develop our own corpus
+- If we use some sort of embedding, it would be better if we had our own corpus
 of reviews. Currently we do not have that, and would have to use one of the
 pre-existing corpuses, which are not from a similar task (they're from, e.g.,
 Wikipedia).
